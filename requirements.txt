@@ -1,0 +1,23 @@
+# Rika runtime dependencies (Python 3.11+ on Windows, tested on 3.13)
+rapidfuzz==3.14.6
+pypdf==6.19.0
+google-api-python-client==2.201.0
+google-auth==2.60.0
+google-auth-oauthlib==1.5.0
+google-auth-httplib2==0.4.4
+pywin32==312
+edge-tts==7.2.8
+pyttsx3==2.99
+pystray==0.19.5
+Pillow==12.3.0
+sounddevice==0.5.6
+numpy==2.5.3
+kokoro-onnx==0.6.1
+onnxruntime==1.30.0
+espeakng-loader==0.2.4
+phonemizer==3.4.0
+pedalboard==0.9.25
+vosk==0.3.45
+faster-whisper==1.2.1
+ctranslate2==4.8.2
+av==19.0.1

@@ -1,0 +1,84 @@
+{
+  "config_version": 2,
+  "accounts": {
+    "rjoprintingservice": {
+      "name": "RJO Printing Service",
+      "email": "rjoprintingservice@gmail.com",
+      "chrome_profile_dir": "Profile 2",
+      "aliases": [
+        "rjo",
+        "rjo printing",
+        "rjo printing service",
+        "printing service",
+        "shop"
+      ]
+    }
+  },
+  "default_print_account": "rjoprintingservice",
+  "printer": "EPSON L120 Series",
+  "wake_word_sensitivity": 0.5,
+  "wake_word": {
+    "engine": "vosk",
+    "words": [
+      "rika"
+    ],
+    "openwakeword_model": ""
+  },
+  "hotkey": "ctrl+alt+r",
+  "greet_on_wake": true,
+  "follow_up_seconds": 8,
+  "tts": {
+    "engine": "kokoro",
+    "voices": [
+      [
+        "af_bella",
+        0.7
+      ],
+      [
+        "af_nicole",
+        0.3
+      ]
+    ],
+    "pitch_semitones": 2.0,
+    "speed": 1.1,
+    "preserve_formants": true,
+    "fallback": [
+      "edge",
+      "sapi"
+    ],
+    "kokoro_model": "kokoro-v1.0.onnx",
+    "edge": {
+      "voice": "en-US-AnaNeural",
+      "pitch": "+15Hz",
+      "rate": "+5%",
+      "volume": "+0%"
+    },
+    "sapi": {
+      "voice": "Zira",
+      "rate": "+5%"
+    },
+    "piper": {
+      "exe": "",
+      "model": ""
+    },
+    "elevenlabs": {
+      "enabled": false,
+      "voice_id": "",
+      "api_key": ""
+    }
+  },
+  "stt": {
+    "model": "base.en",
+    "beam_size": 5
+  },
+  "search_days": 14,
+  "max_search_messages": 100,
+  "fuzzy_threshold": 72,
+  "silence_seconds": 1.5,
+  "max_record_seconds": 15,
+  "speech_start_timeout": 6,
+  "mic_device": null,
+  "download_retention_days": 7,
+  "sumatra_path": "",
+  "chrome_path": ""
+}

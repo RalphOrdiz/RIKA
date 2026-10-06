@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rika Voice Lab</title>
+<style>
+  :root {
+    --bg: #fbf7fa; --panel: #ffffff; --ink: #2a2230; --muted: #7a6f80; --line: #ece3ee;
+    --accent: #e0457b; --accent-ink: #ffffff; --accent-soft: #fde6ef; --sel: #ffd1e1; --ok: #1f8a5b;
+    --shadow: 0 1px 2px rgba(60, 20, 50, .06), 0 4px 16px rgba(60, 20, 50, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17131a; --panel: #211b25; --ink: #f1eaf3; --muted: #a99db0; --line: #352c3a;
+      --accent: #ff6b9d; --accent-ink: #1b0f15; --accent-soft: #3a1f2c; --sel: #5a2840; --ok: #4fd39a;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 "Segoe UI", system-ui, sans-serif; }
+  header { padding: 24px 16px 8px; max-width: 1200px; margin: 0 auto; }
+  h1 { margin: 0; font-size: 26px; letter-spacing: -.01em; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--muted); margin: 4px 0 0; }
+  main { max-width: 1200px; margin: 0 auto; padding: 0 16px 140px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; box-shadow: var(--shadow); margin: 12px 0; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .label { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-right: 4px; }
+  .seg { display: inline-flex; flex-wrap: wrap; max-width: 100%; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+  .seg button { border: 0; background: transparent; color: var(--ink); padding: 6px 12px; cursor: pointer; font: inherit; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+  .btn { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 10px; padding: 7px 12px; cursor: pointer; font: inherit; }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  input[type=text] { flex: 1 1 200px; min-width: 0; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 8px 10px; font: inherit; }
+  .current { display: inline-block; max-width: 100%; background: var(--accent-soft); border-radius: 999px; padding: 3px 12px; margin-top: 8px; font-size: 14px; }
+  .progress { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; margin-top: 8px; }
+  .progress > div { height: 100%; width: 0; background: var(--accent); transition: width .4s; }
+  .hint { color: var(--muted); font-size: 13px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 12px; }
+  .panel, .card { min-width: 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px; box-shadow: var(--shadow); }
+  .card.playing { outline: 2px solid var(--accent); }
+  .card h3 { margin: 0 0 8px; font-size: 15px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .badge { font-size: 11px; border-radius: 99px; padding: 1px 7px; background: var(--accent-soft); color: var(--ink); font-weight: 500; }
+  table { border-collapse: collapse; width: 100%; }
+  th { font-size: 11px; color: var(--muted); font-weight: 500; padding: 2px; text-align: center; }
+  th.p { text-align: right; padding-right: 6px; white-space: nowrap; }
+  td { padding: 2px; }
+  .cell { width: 100%; height: 30px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--ink); cursor: pointer; font-size: 12px; }
+  .cell:hover { border-color: var(--accent); }
+  .cell.sel { background: var(--sel); border-color: var(--accent); font-weight: 600; }
+  .cell.cur { box-shadow: inset 0 0 0 2px var(--ok); }
+  .cell:disabled { cursor: default; opacity: .35; }
+  footer { position: fixed; left: 0; right: 0; bottom: 0; background: var(--panel); border-top: 1px solid var(--line); padding: 10px 16px; box-shadow: 0 -4px 16px rgba(0,0,0,.08); }
+  footer .inner { max-width: 1200px; margin: 0 auto; }
+  #selText { font-weight: 600; margin-right: 6px; }
+  #toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 9px 14px; border-radius: 10px; opacity: 0; transition: opacity .25s; pointer-events: none; max-width: calc(100% - 32px); }
+  #toast.show { opacity: 1; }
+  code { background: var(--accent-soft); padding: 2px 6px; border-radius: 6px; font-size: 13px; word-break: break-all; }
+  @media (max-width: 600px) { h1 { font-size: 22px; } footer .row { gap: 6px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Rika <span>Voice Lab</span></h1>
+  <p class="sub">Pick Rika's voice. Click a square to hear it at that pitch and speed. Green outline = the voice Rika uses now.</p>
+  <div class="current" id="current"></div>
+</header>
+<main>
+  <section class="panel">
+    <div class="row">
+      <span class="label">Test line</span>
+      <div class="seg" id="lineSeg" role="group" aria-label="Test line"></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <span class="label">Show</span>
+      <div class="seg" id="filterSeg" role="group" aria-label="Accent filter">
+        <button data-f="all" aria-pressed="true">All</button><button data-f="US" aria-pressed="false">American</button><button data-f="UK" aria-pressed="false">British</button><button data-f="blend" aria-pressed="false">Blends</button>
+      </div>
+      <button class="btn" id="compareBtn" title="Play the selected line for every visible voice at the selected pitch and speed">&#9654; Compare all voices</button>
+      <button class="btn" id="stopBtn">&#9632; Stop</button>
+    </div>
+  </section>
+
+  <section class="panel" id="blendPanel">
+    <div class="row">
+      <span class="label">Try a blend</span>
+      <input type="text" id="blendInput" placeholder="af_bella:0.6,af_nicole:0.4" aria-label="Voice blend">
+      <button class="btn primary" id="blendBtn">Render blend</button>
+    </div>
+    <p class="hint" id="blendHint"></p>
+    <div class="progress" id="progressWrap" hidden><div id="progressBar"></div></div>
+    <p class="hint" id="statusText"></p>
+  </section>
+
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>
+  <div class="inner row">
+    <span id="selText">Pick a square</span>
+    <button class="btn" data-play="0">&#9654; 1</button>
+    <button class="btn" data-play="1">&#9654; 2</button>
+    <button class="btn" data-play="2">&#9654; 3</button>
+    <button class="btn" id="playAllBtn">&#9654; All 3</button>
+    <button class="btn primary" id="useBtn">&#9733; Use this voice</button>
+  </div>
+</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const BOOT = /*__BOOT__*/null;
+let S = BOOT.state;
+const API = BOOT.api;
+let lineIdx = 0, filter = "all", sel = null, manifestSig = "";
+const audio = new Audio();
+let playQueue = [];
+
+const $ = (id) => document.getElementById(id);
+const fmtPitch = (p) => (p >= 0 ? "+" : "") + Number(p);
+const fmtSpeed = (s) => Number(s).toFixed(2);
+const key = (p, s) => fmtPitch(p) + "|" + fmtSpeed(s);
+
+function toast(msg, ms = 3500) {
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("show"), ms);
+}
+
+function el(tag, attrs = {}, text) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") e.className = v; else if (k.startsWith("on")) e[k] = v; else e.setAttribute(k, v);
+  }
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+// ---------------------------------------------------------------- playback
+function playList(urls, onEach) {
+  playQueue = urls.filter(Boolean).map((u, i) => ({ u, i }));
+  next();
+  function next() {
+    const item = playQueue.shift();
+    document.querySelectorAll(".card.playing").forEach((c) => c.classList.remove("playing"));
+    if (!item) return;
+    if (onEach) onEach(item.i);
+    audio.src = item.u; audio.play().catch(() => toast("Could not play audio"));
+    audio.onended = () => setTimeout(next, 250);
+  }
+}
+function stopAll() { playQueue = []; audio.pause(); document.querySelectorAll(".card.playing").forEach((c) => c.classList.remove("playing")); }
+
+function clipsFor(group, p, s) { return (group.clips || {})[key(p, s)] || []; }
+
+// ---------------------------------------------------------------- rendering
+function renderTop() {
+  const c = S.current;
+  $("current").textContent = `Rika uses now: ${c.label} · pitch ${fmtPitch(c.pitch)} · speed ${fmtSpeed(c.speed)}` +
+    (c.engine !== "kokoro" ? ` (engine "${c.engine}" - Use this voice switches to Kokoro)` : "");
+  const seg = $("lineSeg"); seg.textContent = "";
+  S.manifest.lines.forEach((t, i) => {
+    const b = el("button", { "aria-pressed": String(i === lineIdx), title: t }, `${i + 1}. ${t.length > 22 ? t.slice(0, 22) + "…" : t}`);
+    b.onclick = () => { lineIdx = i; renderTop(); renderGrid(); if (sel) playSel([lineIdx]); };
+    seg.appendChild(b);
+  });
+  if (!API) {
+    $("blendInput").disabled = true; $("blendBtn").disabled = true;
+    $("blendHint").textContent = "Blends and “Use this voice” work while the lab is running: run voice_lab.py or tray menu → Voice Lab.";
+  } else {
+    $("blendHint").textContent = "Voices: " + (S.voices || []).join(", ") + ". Weights are relative (they don't need to add up to 1).";
+  }
+  const st = S.status || {};
+  $("progressWrap").hidden = !(API && st.busy);
+  $("progressBar").style.width = st.total ? Math.round((st.done / st.total) * 100) + "%" : "0%";
+  $("statusText").textContent = API ? (st.busy ? `${st.message} — ${st.done}/${st.total} clips` : (st.message || "")) : "";
+}
+
+function visibleGroups() {
+  return S.manifest.groups.filter((g) => filter === "all" || (filter === "blend" ? g.kind === "blend" : g.accent === filter && g.kind !== "blend"));
+}
+
+function isCurrent(g, p, s) {
+  const c = S.current;
+  return JSON.stringify(g.voices) === JSON.stringify(c.voices) && Number(p) === Number(c.pitch) && Number(s) === Number(c.speed);
+}
+
+function renderGrid() {
+  const grid = $("grid"); grid.textContent = "";
+  const pitches = S.manifest.pitches, speeds = S.manifest.speeds;
+  for (const g of visibleGroups()) {
+    const card = el("div", { class: "card", "data-id": g.id });
+    const h = el("h3", {}, g.label);
+    h.appendChild(el("span", { class: "badge" }, g.kind === "blend" ? "blend" : g.accent));
+    card.appendChild(h);
+    const table = el("table"); const head = el("tr"); head.appendChild(el("th", { class: "p" }, "pitch \\ speed"));
+    speeds.forEach((s) => head.appendChild(el("th", {}, "×" + fmtSpeed(s))));
+    table.appendChild(head);
+    for (const p of pitches) {
+      const tr = el("tr"); tr.appendChild(el("th", { class: "p" }, fmtPitch(p)));
+      for (const s of speeds) {
+        const urls = clipsFor(g, p, s);
+        const ready = urls[lineIdx];
+        const isSel = sel && sel.id === g.id && sel.p === p && sel.s === s;
+        const b = el("button", {
+          class: "cell" + (isSel ? " sel" : "") + (isCurrent(g, p, s) ? " cur" : ""),
+          title: `${g.label}, pitch ${fmtPitch(p)}, speed ${fmtSpeed(s)}`,
+          "aria-label": `Play ${g.label} pitch ${fmtPitch(p)} speed ${fmtSpeed(s)}`,
+        }, ready ? "▶" : "…");
+        b.disabled = !ready;
+        b.onclick = () => { sel = { id: g.id, p, s }; renderGrid(); renderSel(); playSel([lineIdx]); };
+        const td = el("td"); td.appendChild(b); tr.appendChild(td);
+      }
+      table.appendChild(tr);
+    }
+    card.appendChild(table);
+    grid.appendChild(card);
+  }
+  if (!grid.children.length) grid.appendChild(el("p", { class: "hint" }, "Nothing here yet — clips appear as they are rendered."));
+}
+
+function selGroup() { return sel && S.manifest.groups.find((g) => g.id === sel.id); }
+
+function renderSel() {
+  const g = selGroup();
+  $("selText").textContent = g ? `${g.label} · pitch ${fmtPitch(sel.p)} · speed ${fmtSpeed(sel.s)}` : "Pick a square";
+  document.querySelectorAll("footer button").forEach((b) => (b.disabled = !g));
+}
+
+function playSel(lines) {
+  const g = selGroup(); if (!g) return;
+  const urls = clipsFor(g, sel.p, sel.s);
+  playList(lines.map((i) => urls[i]));
+}
+
+// ---------------------------------------------------------------- actions
+document.querySelectorAll("footer [data-play]").forEach((b) => (b.onclick = () => playSel([Number(b.dataset.play)])));
+$("playAllBtn").onclick = () => playSel([0, 1, 2]);
+$("stopBtn").onclick = stopAll;
+$("compareBtn").onclick = () => {
+  const p = sel ? sel.p : S.manifest.pitches[0], s = sel ? sel.s : S.manifest.speeds[0];
+  const groups = visibleGroups().filter((g) => clipsFor(g, p, s)[lineIdx]);
+  toast(`Comparing ${groups.length} voices at pitch ${fmtPitch(p)}, speed ${fmtSpeed(s)}`);
+  playList(groups.map((g) => clipsFor(g, p, s)[lineIdx]), (i) => {
+    const card = document.querySelector(`.card[data-id="${CSS.escape(groups[i].id)}"]`);
+    if (card) { card.classList.add("playing"); card.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+  });
+};
+document.querySelectorAll("#filterSeg button").forEach((b) => (b.onclick = () => {
+  filter = b.dataset.f;
+  document.querySelectorAll("#filterSeg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  renderGrid();
+}));
+
+async function post(path, body) {
+  const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json", "X-Rika-Token": BOOT.token }, body: JSON.stringify(body) });
+  const data = await r.json().catch(() => ({ ok: false, error: "Bad response" }));
+  if (!data.ok) throw new Error(data.error || "Failed");
+  return data;
+}
+
+$("blendBtn").onclick = async () => {
+  const spec = $("blendInput").value.trim();
+  if (!spec) return toast("Type a blend like af_bella:0.6,af_nicole:0.4");
+  try { await post("/api/blend", { blend: spec }); toast("Rendering your blend… it will appear at the top."); poll(); }
+  catch (e) { toast(e.message, 5000); }
+};
+$("blendInput").addEventListener("keydown", (e) => { if (e.key === "Enter") $("blendBtn").click(); });
+
+$("useBtn").onclick = async () => {
+  const g = selGroup(); if (!g) return;
+  if (!API) {
+    const spec = g.voices.map(([n, w]) => `${n}:${w}`).join(",");
+    const cmd = `Rika.exe --voice-lab --use "${spec}" --pitch ${Number(sel.p)} --speed ${fmtSpeed(sel.s)}`;
+    navigator.clipboard?.writeText(cmd).catch(() => {});
+    return toast("Lab isn't running. Command copied: " + cmd, 8000);
+  }
+  try {
+    const r = await post("/api/use", { voices: g.voices, pitch: sel.p, speed: sel.s });
+    toast(r.message, 5000); poll(true);
+  } catch (e) { toast(e.message, 5000); }
+};
+
+// ---------------------------------------------------------------- live updates
+async function poll(force) {
+  if (!API) return;
+  try {
+    const r = await fetch("/api/state", { cache: "no-store" });
+    S = await r.json();
+    const sig = JSON.stringify(S.manifest.groups.map((g) => [g.id, Object.values(g.clips).flat().filter(Boolean).length])) + JSON.stringify(S.current);
+    renderTop();
+    if (force || sig !== manifestSig) { manifestSig = sig; renderGrid(); renderSel(); }
+  } catch (e) { $("statusText").textContent = "Lab stopped — the page still plays the clips already made."; return; }
+  clearTimeout(poll.h); poll.h = setTimeout(poll, S.status && S.status.busy ? 1500 : 5000);
+}
+
+renderTop(); renderGrid(); renderSel(); poll();
+</script>
+</body>
+</html>

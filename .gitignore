@@ -1,0 +1,13 @@
+*.log
+*.pyc
+.env
+.pytest_cache/
+.venv/
+__pycache__/
+build/
+credentials.json
+dist/
+models/
+token.json
+vendor/
+voice_lab_output/
